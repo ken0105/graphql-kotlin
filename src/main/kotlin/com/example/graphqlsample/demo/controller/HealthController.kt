@@ -1,4 +1,4 @@
-package com.example.graphqlsample.demo.Controller
+package com.example.graphqlsample.demo.controller
 
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
