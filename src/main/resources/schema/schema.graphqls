@@ -1,0 +1,8 @@
+type Query {
+    Olympics(yearFilter: Int): [Olympic]
+}
+
+type Olympic {
+    country: String
+    year: Int
+}
