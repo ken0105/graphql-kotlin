@@ -1,8 +1,27 @@
 type Query {
-    Olympics(yearFilter: Int): [Olympic]
+    olympics(yearFilter: Int): Result
+}
+
+type Mutation {
+    addOlympic(country: String!, year: Int!): Result
+    deleteOlympic(year: Int!): Result!
+}
+
+type Subscription{
+    subscribeOlympics: Olympic
+}
+
+type Result {
+    status: Status!
+    olympics: [Olympic]
 }
 
 type Olympic {
-    country: String
-    year: Int
+    year: Int!
+    country: String!
+}
+
+type Status {
+    code: Int!,
+    message: String!
 }

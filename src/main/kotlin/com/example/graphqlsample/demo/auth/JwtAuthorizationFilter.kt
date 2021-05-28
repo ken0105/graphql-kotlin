@@ -18,6 +18,9 @@ class JwtAuthorizationFilter(authenticationManager: AuthenticationManager)
     : BasicAuthenticationFilter(authenticationManager) {
     override fun doFilterInternal(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain) {
         val header = req.getHeader(AUTH_HEADER)
+        println("#####################")
+        println(req.requestURI)
+        println("#####################")
         println(header)
         if (header == null || !header.startsWith(JWT_PREFIX)) {
             chain.doFilter(req, res)
@@ -32,8 +35,7 @@ class JwtAuthorizationFilter(authenticationManager: AuthenticationManager)
 
     private fun getAuthentication(req: HttpServletRequest): UsernamePasswordAuthenticationToken? {
         val token = req.getHeader(AUTH_HEADER)
-        print("token ")
-        println(token)
+        println("token $token")
         if (token != null) {
             val user: String = Jwts.parserBuilder()
                 .setSigningKey(DUMMY_KEY.toByteArray())

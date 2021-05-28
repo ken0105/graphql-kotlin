@@ -1,22 +1,57 @@
-package com.example.graphqlsample.demo
+package com.example.graphqlsample.demo.dataFetcher
 
+import com.example.graphqlsample.demo.dataFetcher.types.Olympic
+import com.example.graphqlsample.demo.dataFetcher.types.Result
+import com.example.graphqlsample.demo.dataFetcher.types.Status
+import com.example.graphqlsample.demo.processor.Processor
 import com.netflix.graphql.dgs.DgsComponent
+import com.netflix.graphql.dgs.DgsData
 import com.netflix.graphql.dgs.DgsQuery
 import com.netflix.graphql.dgs.InputArgument
+import graphql.schema.DataFetchingEnvironment
+import org.reactivestreams.Publisher
 
 @DgsComponent
-class OlympicDataFetcher {
+class OlympicDataFetcher(private val processor: Processor<Olympic>) {
     @DgsQuery
-    fun Olympics(@InputArgument yearFilter: Int?): List<Olympic> {
-        return if (yearFilter != null) {
+    fun olympics(@InputArgument yearFilter: Int?): Result {
+        val olympics = if (yearFilter != null) {
             olympics.filter { it.year == yearFilter }
         } else {
             olympics
         }
+        return Result(Status(200, "OK"), olympics.toList())
     }
+
+    @DgsData(parentType = "Mutation", field = "addOlympic")
+    fun addOlympic(dataFetchingEnvironment: DataFetchingEnvironment): Result {
+        val year = dataFetchingEnvironment.getArgument<Int>("year")
+        val country = dataFetchingEnvironment.getArgument<String>("country")
+        val newOlympic = Olympic(year, country)
+        olympics.add(newOlympic)
+        processor.emit(newOlympic)
+        return Result(Status(200, "OK"), listOf(Olympic(year = year, country = country)))
+    }
+
+    @DgsData(parentType = "Mutation", field = "deleteOlympic")
+    fun deleteOlympic(dataFetchingEnvironment: DataFetchingEnvironment): Result {
+        val year = dataFetchingEnvironment.getArgument<Int>("year")
+
+        olympics
+            .find { it.year == year }
+            ?.let { olympics.remove(it) }
+
+        return Result(Status(200, "OK"))
+    }
+
+    @DgsData(parentType = "Subscription", field = "subscribeOlympics")
+    fun subscribeOlympics(): Publisher<Olympic> {
+        return processor.publish()
+    }
+
 }
 
-    private val olympics = listOf(
+    private val olympics = mutableSetOf(
         Olympic(1896, "アテネ（ギリシャ）"),
     Olympic(1900,	"パリ（フランス）"),
     Olympic(1904,	"セントルイス（アメリカ）"),
@@ -72,9 +107,3 @@ class OlympicDataFetcher {
     Olympic(2018,	"平昌（韓国）"),
     Olympic(2022,	"北京（中国）")
     )
-
-
-data class Olympic(
-    val year: Int,
-    val Country: String
-)
